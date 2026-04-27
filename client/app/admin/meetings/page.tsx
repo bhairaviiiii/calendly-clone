@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+
 const BASE_URL = "http://127.0.0.1:8000";
 
 export default function MeetingsPage() {
@@ -28,7 +29,7 @@ export default function MeetingsPage() {
       await fetch(`${BASE_URL}/meetings/${id}/cancel`, {
         method: "PUT",
       });
-      fetchMeetings(); // refresh list
+      fetchMeetings();
     } catch (error) {
       console.error("Cancel failed:", error);
     }
@@ -36,96 +37,187 @@ export default function MeetingsPage() {
 
   const now = new Date();
 
-  // This keeps only meetings whose start time is still in the future.
   const upcomingMeetings = useMemo(() => {
     return meetings
       .filter((meeting) => new Date(meeting.start_datetime) >= now)
       .sort(
         (a, b) =>
-          new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime()
+          new Date(a.start_datetime).getTime() -
+          new Date(b.start_datetime).getTime()
       );
   }, [meetings]);
 
-  // This keeps only meetings whose start time has already passed.
   const pastMeetings = useMemo(() => {
     return meetings
       .filter((meeting) => new Date(meeting.start_datetime) < now)
       .sort(
         (a, b) =>
-          new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime()
+          new Date(b.start_datetime).getTime() -
+          new Date(a.start_datetime).getTime()
       );
   }, [meetings]);
 
+  const cancelledMeetings = meetings.filter(
+    (meeting) => meeting.status === "cancelled"
+  );
+
   if (loading) {
-    return <div className="p-8">Loading meetings...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <p className="text-gray-600 font-medium text-lg">
+          Loading meetings...
+        </p>
+      </div>
+    );
   }
 
+  function MeetingCard({
+    meeting,
+    showCancelButton = false,
+  }: {
+    meeting: any;
+    showCancelButton?: boolean;
+  }) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <p className="text-lg font-bold text-gray-900">
+              {meeting.invitee_name}
+            </p>
+
+            <p className="text-gray-500 mt-1">{meeting.invitee_email}</p>
+
+            {meeting.event_name && (
+              <p className="text-sm text-blue-600 font-semibold mt-3">
+                {meeting.event_name}
+              </p>
+            )}
+
+            <div className="mt-3 text-sm text-gray-700 space-y-1">
+              <p>
+                <span className="font-semibold">Start:</span>{" "}
+                {new Date(meeting.start_datetime).toLocaleString()}
+              </p>
+              <p>
+                <span className="font-semibold">End:</span>{" "}
+                {new Date(meeting.end_datetime).toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start md:items-end gap-3">
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${
+                meeting.status === "scheduled"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {meeting.status}
+            </span>
+
+            {showCancelButton && meeting.status === "scheduled" && (
+              <button
+                onClick={() => handleCancel(meeting.id)}
+                className="rounded-xl bg-red-500 text-white px-4 py-2 text-sm font-semibold hover:bg-red-600 transition"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function EmptyState({ text }: { text: string }) {
+    return (
+      <div className="rounded-2xl border border-dashed border-gray-300 bg-white/70 p-8 text-center">
+        <p className="text-gray-500 font-medium">{text}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Meetings</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-blue-600">
+            Admin Dashboard
+          </p>
+          <h1 className="text-4xl font-bold text-gray-900 mt-1">
+            Meetings
+          </h1>
+          <p className="text-gray-500 mt-2">
+            View, track, and manage all scheduled meetings.
+          </p>
+        </div>
 
-        <section className="mb-10">
-          <h2 className="text-2xl font-semibold mb-4">Upcoming Meetings</h2>
+        <div className="grid md:grid-cols-3 gap-4 mb-10">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <p className="text-sm text-gray-500">Total Meetings</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">
+              {meetings.length}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <p className="text-sm text-gray-500">Upcoming</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">
+              {upcomingMeetings.length}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <p className="text-sm text-gray-500">Cancelled</p>
+            <p className="text-3xl font-bold text-red-500 mt-2">
+              {cancelledMeetings.length}
+            </p>
+          </div>
+        </div>
+
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Upcoming Meetings
+            </h2>
+            <span className="text-sm text-gray-500">
+              {upcomingMeetings.length} meetings
+            </span>
+          </div>
 
           {upcomingMeetings.length === 0 ? (
-            <p className="text-gray-500">No upcoming meetings.</p>
+            <EmptyState text="No upcoming meetings yet." />
           ) : (
             <div className="space-y-4">
-              {upcomingMeetings.map((m) => (
-                <div
-                  key={m.id}
-                  className="bg-white border rounded-xl p-5 shadow-sm flex justify-between items-start"
-                >
-                  <div>
-                    <p className="font-semibold text-lg">{m.invitee_name}</p>
-                    <p className="text-gray-600">{m.invitee_email}</p>
-                    <p className="text-sm text-gray-700 mt-2">
-                      {new Date(m.start_datetime).toLocaleString()}
-                    </p>
-                    <p className="text-sm mt-1">
-                      Status:{" "}
-                      <span className="font-medium capitalize">{m.status}</span>
-                    </p>
-                  </div>
-
-                  {m.status === "scheduled" && (
-                    <button
-                      onClick={() => handleCancel(m.id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
+              {upcomingMeetings.map((meeting) => (
+                <MeetingCard
+                  key={meeting.id}
+                  meeting={meeting}
+                  showCancelButton={true}
+                />
               ))}
             </div>
           )}
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Past Meetings</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Past Meetings
+            </h2>
+            <span className="text-sm text-gray-500">
+              {pastMeetings.length} meetings
+            </span>
+          </div>
 
           {pastMeetings.length === 0 ? (
-            <p className="text-gray-500">No past meetings.</p>
+            <EmptyState text="No past meetings found." />
           ) : (
             <div className="space-y-4">
-              {pastMeetings.map((m) => (
-                <div
-                  key={m.id}
-                  className="bg-white border rounded-xl p-5 shadow-sm"
-                >
-                  <p className="font-semibold text-lg">{m.invitee_name}</p>
-                  <p className="text-gray-600">{m.invitee_email}</p>
-                  <p className="text-sm text-gray-700 mt-2">
-                    {new Date(m.start_datetime).toLocaleString()}
-                  </p>
-                  <p className="text-sm mt-1">
-                    Status:{" "}
-                    <span className="font-medium capitalize">{m.status}</span>
-                  </p>
-                </div>
+              {pastMeetings.map((meeting) => (
+                <MeetingCard key={meeting.id} meeting={meeting} />
               ))}
             </div>
           )}

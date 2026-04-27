@@ -145,7 +145,7 @@ if (loading) {
               min={new Date().toISOString().split("T")[0]}
               value={selectedDate}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -193,7 +193,7 @@ if (loading) {
                 placeholder="Your Name"
                 value={inviteeName}
                 onChange={(e) => setInviteeName(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
               <input
@@ -201,7 +201,7 @@ if (loading) {
                 placeholder="Your Email"
                 value={inviteeEmail}
                 onChange={(e) => setInviteeEmail(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
               <button
